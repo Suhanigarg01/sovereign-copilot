@@ -1,0 +1,35 @@
+# ---------------------------------------------------------------------------
+# Model registry. This is the ONLY file you touch to add/swap a model.
+# Adding a new model = add an entry here + `ollama pull <model>`. No code change.
+# ---------------------------------------------------------------------------
+runtime:
+  provider: ollama                     # ollama | vllm (vLLM uses an OpenAI-compatible /v1/chat/completions)
+  base_url: http://localhost:11434
+
+models:
+  - name: coder-primary
+    ollama_model: qwen2.5-coder:7b     # swap to deepseek-coder-v2:16b-lite-instruct-q4_K_M if VRAM allows
+    task_types: [coding]
+    context_window: 32768
+    notes: "Handles: write/debug/refactor code, run+fix scripts"
+
+  - name: reasoner-general
+    ollama_model: llama3.1:8b-instruct-q4_K_M   # bump to qwen2.5:14b-instruct on bigger GPUs
+    task_types: [document, general, reasoning, agent_planning]
+    context_window: 128000
+    notes: "Handles: summarization, drafting notes, agent plan/act reasoning"
+
+  - name: vision-local
+    ollama_model: qwen2-vl:7b          # or llava:13b as a fallback
+    task_types: [vision, multimodal]
+    context_window: 32768
+    notes: "Handles: scanned drawings, handwriting, photos, image QA"
+
+  - name: router-classifier
+    ollama_model: qwen2.5:1.5b-instruct-q4_K_M   # tiny + fast, used only to classify tasks
+    task_types: [classification]
+    context_window: 8192
+    notes: "Cheap model used purely for task-type routing decisions"
+
+default_task_type: general
+max_agent_steps: 8
