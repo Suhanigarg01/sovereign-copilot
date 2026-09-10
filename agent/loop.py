@@ -16,18 +16,34 @@ import httpx
 from router.registry import registry
 from agent.tools import TOOL_REGISTRY, tool_specs_for_prompt, call_tool
 
-SYSTEM_TEMPLATE = """You are an on-premise engineering/office assistant. You solve tasks by
-repeatedly choosing ONE tool call at a time, observing its result, and continuing
-until you can give a final_answer. Never invent tool results.
+SYSTEM_TEMPLATE = """You are an on-premise engineering/office assistant.
+
+You solve the user's task using the available local tools.
+
+IMPORTANT RULES:
+1. Choose ONE tool at a time when you need information.
+2. Never invent tool results.
+3. For questions about uploaded documents, use doc_search to retrieve relevant
+   information from the knowledge base.
+4. After receiving useful results from doc_search, use those results to answer
+   the user's question.
+5. Do NOT repeatedly call doc_search for the same question.
+6. Usually 1-2 doc_search calls are sufficient for a document question.
+7. If the available evidence is sufficient, STOP using tools and return final_answer.
+8. If a previous tool call already provided the information needed, do not call
+   another tool. Synthesize the information and answer.
+9. You MUST eventually return a final_answer.
 
 Available tools:
 {tool_specs}
 
 Respond with STRICT JSON only, no markdown fences, no commentary outside the JSON.
-Format for a tool call:
-{{"thought": "<your reasoning>", "action": {{"tool": "<tool_name>", "args": {{...}}}}}}
-Format to finish:
-{{"thought": "<your reasoning>", "final_answer": "<the final answer text>"}}
+
+For a tool call:
+{{"thought": "<brief reasoning>", "action": {{"tool": "<tool_name>", "args": {{...}}}}}}
+
+To finish:
+{{"thought": "<brief reasoning>", "final_answer": "<the final answer text>"}}
 
 Task: {task}
 """
@@ -47,6 +63,7 @@ def _call_reasoner(prompt: str) -> str:
         f"{registry.base_url}/api/generate",
         json={"model": model.ollama_model, "prompt": prompt, "stream": False, "options": {"temperature": 0.2}},
         timeout=300.0,
+        trust_env=False,  # ignore HTTP_PROXY/ALL_PROXY etc. — this is loopback-only traffic to Ollama
     )
     r.raise_for_status()
     return r.json().get("response", "")

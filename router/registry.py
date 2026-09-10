@@ -57,6 +57,7 @@ class ModelRegistry:
                     f"{self.base_url}/api/generate",
                     json={"model": m.ollama_model, "prompt": "ping", "stream": False, "options": {"num_predict": 1}},
                     timeout=15.0,
+                    trust_env=False,  # ignore HTTP_PROXY/ALL_PROXY etc. — this is loopback-only traffic to Ollama
                 )
                 results[m.name] = r.status_code == 200
             except Exception:

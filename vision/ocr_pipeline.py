@@ -44,6 +44,7 @@ def vision_understand(image_path: str, prompt: str) -> str:
         f"{registry.base_url}/api/generate",
         json={"model": model.ollama_model, "prompt": prompt, "images": [img_b64], "stream": False},
         timeout=300.0,
+        trust_env=False,  # ignore HTTP_PROXY/ALL_PROXY etc. — this is loopback-only traffic to Ollama
     )
     r.raise_for_status()
     return r.json().get("response", "")

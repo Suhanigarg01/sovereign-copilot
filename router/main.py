@@ -60,6 +60,6 @@ def _call_ollama(ollama_model: str, prompt: str, images: Optional[list] = None) 
     payload = {"model": ollama_model, "prompt": prompt, "stream": False}
     if images:
         payload["images"] = images
-    r = httpx.post(f"{registry.base_url}/api/generate", json=payload, timeout=300.0)
+    r = httpx.post(f"{registry.base_url}/api/generate", json=payload, timeout=300.0, trust_env=False)
     r.raise_for_status()
     return r.json().get("response", "")
